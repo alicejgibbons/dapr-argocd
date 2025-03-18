@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dapr-components
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yourusername/dapr-argocd.git
+    path: gitops/pubsub-components
+    targetRevision: main
+    directory:
+      recurse: true
+      exclude: '*.yaml'
+      include: 'redis-pubsub.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pubsub-demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

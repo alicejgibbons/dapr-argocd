@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subscriber
+  namespace: pubsub-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: subscriber
+  template:
+    metadata:
+      labels:
+        app: subscriber
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "subscriber"
+        dapr.io/app-port: "8080"
+        dapr.io/log-level: "debug"
+    spec:
+      containers:
+      - name: subscriber
+        image: rochabr/dapr-subscriber:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
