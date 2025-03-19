@@ -30,7 +30,6 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 Then, install the Argo CD cli:
 
 ```bash
-# Install Argo CD CLI first if you haven't already
 brew install argocd
 ```
 
@@ -49,13 +48,7 @@ Get the initial admin password:
 argocd admin initial-password -n argocd
 ```
 
-Log in with username `admin` and the password you just retrieved.
-
-```bash
-argocd admin <initial-password> -n argocd
-```
-
-Using the username admin and the password from above, login to Argo CD's IP or hostname (in our case, we are running it on `localhost:8080`):
+Using the username admin and the password from above, login to Argo CD's IP or hostname (on our case, we are running it on `localhost:8080`):
 
 ```bash
 argocd login localhost:8080
@@ -69,10 +62,16 @@ An Argo CD application is a custom Kubernetes resource that defines how an appli
 
 When deployed, Argo CD continuously monitors both your Git repository and Kubernetes cluster to ensure they remain synchronized. Any deviation triggers either an alert or an automatic reconciliation based on your configuration. The application can be created and managed through Argo CD's web UI, CLI commands, YAML manifests, or API calls, making it a flexible foundation for implementing continuous delivery in Kubernetes environments.
 
+First we need to set the current namespace to `argocd` running the following command:
+
+```bash
+kubectl config set-context --current --namespace=argocd
+```
+
 Here, the Argo CD cli is used to create the Application for our Dapr deployment:
 
 ```bash
- argocd app create dapr --repo https://github.com/rochabr/dapr-argocd.git --path gitops/dapr --dest-server https://kubernetes.default.svc --dest-namespace default
+argocd app create dapr --repo https://github.com/rochabr/dapr-argocd.git --path gitops/dapr --dest-server https://kubernetes.default.svc --dest-namespace default
 ```
 
 Sync the application and verify the installation:
