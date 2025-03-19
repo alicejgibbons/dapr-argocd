@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/yourusername/dapr-argocd.git
+    repoURL: https://github.com/rochabr/dapr-argocd.git
     path: gitops/pubsub-components
     targetRevision: main
     directory:
