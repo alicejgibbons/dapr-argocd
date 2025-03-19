@@ -1,18 +1,17 @@
-# Dapr + Argo CD + Redis PubSub Example
+# Dapr + Argo CD Example
 
-This repository demonstrates how to deploy Dapr and Redis using Argo CD, along with a sample Go application that uses Dapr's pub/sub building block with Redis as the message broker.
+This repository demonstrates how to deploy Dapr and Redis using Argo CD, along with a sample application that uses Dapr's State Management building block with Redis.
 
 ## Repository Structure
 
 - `/gitops`: Contains all Argo CD, Dapr, and Redis configuration files
-- `/app`: Contains the sample Go publisher and subscriber applications
+- `/app`: Contains the sample node and python applications
 
 ## Prerequisites
 
 - Kubernetes cluster (v1.21+ recommended)
 - kubectl configured to access your cluster
 - Helm v3
-- Docker (for building application images)
 - Git
 
 ## Step 1: Install Argo CD
@@ -62,16 +61,10 @@ An Argo CD application is a custom Kubernetes resource that defines how an appli
 
 When deployed, Argo CD continuously monitors both your Git repository and Kubernetes cluster to ensure they remain synchronized. Any deviation triggers either an alert or an automatic reconciliation based on your configuration. The application can be created and managed through Argo CD's web UI, CLI commands, YAML manifests, or API calls, making it a flexible foundation for implementing continuous delivery in Kubernetes environments.
 
-First we need to set the current namespace to `argocd` running the following command:
-
-```bash
-kubectl config set-context --current --namespace=argocd
-```
-
 Here, the Argo CD cli is used to create the Application for our Dapr deployment:
 
 ```bash
-argocd app create dapr --repo https://github.com/rochabr/dapr-argocd.git --path gitops/dapr --dest-server https://kubernetes.default.svc --dest-namespace default
+argocd app create dapr --repo https://github.com/rochabr/dapr-argocd.git --path gitops/dapr --dest-server https://kubernetes.default.svc --dest-namespace dapr-system
 ```
 
 Sync the application and verify the installation:
@@ -87,7 +80,7 @@ kubectl get pods -n dapr-system
 Create an Argo CD application for Redis:
 
 ```bash
-argocd app create redis --repo https://github.com/rochabr/dapr-argocd.git --path gitops/redis --dest-server https://kubernetes.default.svc --dest-namespace default
+argocd app create redis --repo https://github.com/rochabr/dapr-argocd.git --path gitops/redis --dest-server https://kubernetes.default.svc --dest-namespace redis
 ```
 
 Sync the application and verify the installation:
@@ -100,20 +93,20 @@ kubectl get pods -n redis
 
 ## Step 4: Configure Dapr Components
 
-Create the Dapr pub/sub component application:
+Create the namespace:
+
+```bash
+kubectl create namespace argocd-demo
+```
+
+Create the Dapr state store component application:
 
 ```bash
 argocd app create dapr-components \
-  --repo https://github.com/yourusername/dapr-argocd-pubsub.git \
-  --path gitops/pubsub-components \
+  --repo https://github.com/rochabr/dapr-argocd.git \
+  --path gitops/dapr-components \
   --dest-server https://kubernetes.default.svc \
-  --dest-namespace pubsub-demo \
-  --sync-policy automated \
-  --auto-prune \
-  --self-heal \
-  --directory-recurse \
-  --directory-exclude "*.yaml" \
-  --directory-include "redis-pubsub.yaml"
+  --dest-namespace argocd-demo
 ```
 
 Sync the application:
@@ -125,109 +118,57 @@ argocd app get dapr-components
 
 ## Step 5: Deploy the Sample Application
 
-Deploy the publisher and subscriber applications:
+Deploy the `node` and `python` applications:
 
 ```bash
-argocd app create pubsub-demo \
-  --repo https://github.com/yourusername/dapr-argocd-pubsub.git \
-  --path app/kubernetes \
+# Node app
+argocd app create node \
+  --repo https://github.com/rochabr/dapr-argocd.git \
+  --path app/node \
   --dest-server https://kubernetes.default.svc \
-  --dest-namespace pubsub-demo \
-  --sync-policy automated \
-  --auto-prune \
-  --self-heal
+  --dest-namespace argocd-demo
+
+# Python app
+argocd app create python \
+  --repo https://github.com/rochabr/dapr-argocd.git \
+  --path app/python \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace argocd-demo
 ```
 
-This will deploy both the publisher and subscriber services in the `pubsub-demo` namespace.
+This will deploy both the node and python services in the `argocd-demo` namespace.
 
 Verify the deployments:
 
 ```bash
-kubectl get pods -n pubsub-demo
+kubectl get pods -n argocd-demo
 ```
 
-You should see both the publisher and subscriber pods running with their Dapr sidecars.
-
-## Step 6: Verify the Pub/Sub Communication
-
-Check the logs of the subscriber application to verify it's receiving messages:
+You should see both pods running with their Dapr sidecars.
 
 ```bash
-# Get the subscriber pod name
-SUBSCRIBER_POD=$(kubectl get pod -n pubsub-demo -l app=subscriber -o jsonpath='{.items[0].metadata.name}')
-
-# View the logs
-kubectl logs -n pubsub-demo $SUBSCRIBER_POD -c subscriber
+nodeapp-7578bfc4dd-chs7x     2/2     Running   0          29m
+pythonapp-587fb8f7db-s55k6   2/2     Running   0          22m
 ```
 
-You should see messages like:
-```
-Received message: Message 1 from publisher
-Received message: Message 2 from publisher
-...
-```
+## Step 6: Verify the Communication
 
-Check the publisher logs:
+First, run port-forward to access the node service:
 
 ```bash
-# Get the publisher pod name
-PUBLISHER_POD=$(kubectl get pod -n pubsub-demo -l app=publisher -o jsonpath='{.items[0].metadata.name}')
-
-# View the logs
-kubectl logs -n pubsub-demo $PUBLISHER_POD -c publisher
+kubectl port-forward service/nodeapp 8081:80 -n argocd-demo
 ```
 
-You should see messages like:
-```
-Published message: Message 1
-Published message: Message 2
-...
-```
+This will make your service available on `http://localhost:8081`.
 
-## Understanding the Application
-
-The sample application demonstrates the pub/sub pattern using Dapr:
-
-1. **Publisher**: Sends messages every 5 seconds to the `messages` topic
-2. **Subscriber**: Subscribes to the `messages` topic and processes incoming messages
-
-The communication between the services is facilitated by Dapr, which uses Redis as the message broker behind the scenes.
-
-## How It Works
-
-1. Dapr injects sidecars into both applications
-2. The publisher uses Dapr's HTTP/gRPC API to publish messages
-3. The subscriber registers an endpoint that Dapr calls when messages arrive
-4. Dapr handles all the message routing and delivery guarantees
-
-## Customization
-
-To modify this example for your own use:
-
-1. Update the Docker image references in the deployment files
-2. Modify the publisher/subscriber code for your specific use case
-3. Adjust the Dapr component configuration for production settings
-
-## Clean Up
-
-To remove everything:
+In a new terminal run:
 
 ```bash
-# Delete the application
-kubectl delete -f app/kubernetes/application.yaml
+curl -d '{"data":{"orderId":"42"}}' -H "Content-Type:application/json" -X POST http://20.75.235.117:80/neworder
+```
 
-# Delete the Dapr components
-kubectl delete -f gitops/pubsub-components/application.yaml
+Expected output:
 
-# Delete Redis
-kubectl delete -f gitops/redis/application.yaml
-
-# Delete Dapr
-kubectl delete -f gitops/dapr/application.yaml
-
-# Delete Argo CD
-kubectl delete -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.8.0/manifests/install.yaml
-
-# Delete namespaces
-kubectl delete namespace argocd dapr-system redis pubsub-demo
+```bash
+{ "orderId": "42" }
 ```
