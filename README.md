@@ -24,10 +24,14 @@ First, you need to install Argo CD on your Kubernetes cluster:
 kubectl create namespace argocd
 
 # Apply the Argo CD installation manifest
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.8.0/manifests/install.yaml
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
 
-# Wait for rollout
-kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
+Then, install the Argo CD cli:
+
+```bash
+# Install Argo CD CLI first if you haven't already
+brew install argocd
 ```
 
 After installation, access the Argo CD UI:
@@ -42,25 +46,40 @@ Navigate to `https://localhost:8080` in your browser.
 Get the initial admin password:
 
 ```bash
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+argocd admin initial-password -n argocd
 ```
 
 Log in with username `admin` and the password you just retrieved.
 
-## Step 2: Install Dapr Using Argo CD
-
-Create an Argo CD application for Dapr:
-
 ```bash
-# Apply the Dapr application manifest
-kubectl apply -f gitops/dapr/application.yaml
+argocd admin <initial-password> -n argocd
 ```
 
-This will automatically install Dapr in the `dapr-system` namespace using Helm.
-
-Verify the installation:
+Using the username admin and the password from above, login to Argo CD's IP or hostname (in our case, we are running it on `localhost:8080`):
 
 ```bash
+argocd login localhost:8080
+```
+
+For a detailed step-by-step process on how to install Argo CD, follow the [official documentation](https://argo-cd.readthedocs.io/en/stable/getting_started/).
+
+## Step 2: Install Dapr Using the Argo CD cli
+
+An Argo CD application is a custom Kubernetes resource that defines how an application should be deployed and managed using the GitOps methodology. It specifies the source configuration (usually a Git repository, Helm chart, or directory path), the destination cluster and namespace, sync policies for automation, and special synchronization options. This resource acts as the bridge connecting your desired state (defined in Git) with the actual state in your Kubernetes cluster.
+
+When deployed, Argo CD continuously monitors both your Git repository and Kubernetes cluster to ensure they remain synchronized. Any deviation triggers either an alert or an automatic reconciliation based on your configuration. The application can be created and managed through Argo CD's web UI, CLI commands, YAML manifests, or API calls, making it a flexible foundation for implementing continuous delivery in Kubernetes environments.
+
+Here, the Argo CD cli is used to create the Application for our Dapr deployment:
+
+```bash
+ argocd app create dapr --repo https://github.com/rochabr/dapr-argocd.git --path gitops/dapr --dest-server https://kubernetes.default.svc --dest-namespace default
+```
+
+Sync the application and verify the installation:
+
+```bash
+argocd app sync dapr
+argocd app get dapr
 kubectl get pods -n dapr-system
 ```
 
@@ -69,36 +88,55 @@ kubectl get pods -n dapr-system
 Create an Argo CD application for Redis:
 
 ```bash
-# Apply the Redis application manifest
-kubectl apply -f gitops/redis/application.yaml
+argocd app create redis --repo https://github.com/rochabr/dapr-argocd.git --path gitops/redis --dest-server https://kubernetes.default.svc --dest-namespace default
 ```
 
-This will install Redis in the `redis` namespace.
-
-Verify the installation:
+Sync the application and verify the installation:
 
 ```bash
+argocd app sync redis
+argocd app get redis
 kubectl get pods -n redis
 ```
 
 ## Step 4: Configure Dapr Components
 
-Create the Dapr pub/sub component for Redis:
+Create the Dapr pub/sub component application:
 
 ```bash
-# Apply the components application manifest
-kubectl apply -f gitops/pubsub-components/application.yaml
+argocd app create dapr-components \
+  --repo https://github.com/yourusername/dapr-argocd-pubsub.git \
+  --path gitops/pubsub-components \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace pubsub-demo \
+  --sync-policy automated \
+  --auto-prune \
+  --self-heal \
+  --directory-recurse \
+  --directory-exclude "*.yaml" \
+  --directory-include "redis-pubsub.yaml"
 ```
 
-This will create the necessary Dapr component to use Redis as a pub/sub broker.
+Sync the application:
+
+```bash
+argocd app sync dapr-components
+argocd app get dapr-components
+```
 
 ## Step 5: Deploy the Sample Application
 
 Deploy the publisher and subscriber applications:
 
 ```bash
-# Apply the application manifest
-kubectl apply -f app/kubernetes/application.yaml
+argocd app create pubsub-demo \
+  --repo https://github.com/yourusername/dapr-argocd-pubsub.git \
+  --path app/kubernetes \
+  --dest-server https://kubernetes.default.svc \
+  --dest-namespace pubsub-demo \
+  --sync-policy automated \
+  --auto-prune \
+  --self-heal
 ```
 
 This will deploy both the publisher and subscriber services in the `pubsub-demo` namespace.
