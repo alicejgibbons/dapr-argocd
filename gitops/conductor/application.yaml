@@ -9,10 +9,10 @@ spec:
   project: default
   source:
     chart: agent
-    repoURL: oci://public.ecr.aws/diagrid/conductor-charts/agent
+    repoURL: oci://public.ecr.aws/diagrid/conductor-charts
     targetRevision: 0.333.0
     helm:
-      releaseName: dapr-conductor
+      releaseName: agent
       valueFiles:
         - values.yaml
   destination:
