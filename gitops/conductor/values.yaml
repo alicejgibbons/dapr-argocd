@@ -5,8 +5,8 @@ agent:
     us-central1-docker.pkg.dev/prj-common-p-shared-79896/reg-p-common-docker-public/agent:0.333.0
   installDependencies: false
   key: >-
-    agentkey||gcp||projects/199538153898/secrets/0cd6ca68-ff8e-4ab2-b658-0542c9277188/versions/1
-  keyB64: ZDRmMWZhZWUtNWIyZi00MTkyLWFkZmEtOTc5YmZiOGY1ZDc3
+    agentkey||gcp||projects/199538153898/secrets/bffe28fe-be6c-4d81-b8fb-ccda9cdcfbdc/versions/1
+  keyB64: OTAwNTA0ZDQtODI0Mi00YTVmLWE1NGEtZDI4NmQyYzRiMzM4
   logLevel: info
   nodeAffinity: null
   nodeSelector: null
@@ -86,7 +86,7 @@ dapr:
   enabled: false
 daprRbacTargetServiceAccountName: diagrid-agent
 global:
-  agentId: 9cc44022-6f7a-4185-af5d-2a905a1ef99d
+  agentId: f86e74b8-3192-4dec-b31a-b0f67c613d08
   cloudUrl: cloudgrid.diagrid.io:443
   customCA: ''
   isLocal: false
