@@ -39,19 +39,19 @@ After installation, access the Argo CD UI:
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
-Navigate to `https://localhost:8080` in your browser.
-
 Get the initial admin password:
 
 ```bash
 argocd admin initial-password -n argocd
 ```
 
-Using the username admin and the password from above, login to Argo CD's IP or hostname (on our case, we are running it on `localhost:8080`):
+Using the username `admin` and the password from above, login to Argo CD's IP or hostname (on our case, we are running it on `localhost:8080`):
 
 ```bash
 argocd login localhost:8080
 ```
+
+You can also access the UI by navigating to `https://localhost:8080` in your browser.
 
 For a detailed step-by-step process on how to install Argo CD, follow the [official documentation](https://argo-cd.readthedocs.io/en/stable/getting_started/).
 
@@ -64,7 +64,7 @@ When deployed, Argo CD continuously monitors both your Git repository and Kubern
 Here, the Argo CD cli is used to create the Application for our Dapr deployment:
 
 ```bash
-argocd app create dapr --repo https://github.com/rochabr/dapr-argocd.git --path gitops/dapr --dest-server https://kubernetes.default.svc --dest-namespace dapr-system
+argocd app create dapr --repo https://github.com/<your-username>/dapr-argocd.git --path gitops/dapr --dest-server https://kubernetes.default.svc --dest-namespace dapr-system
 ```
 
 Sync the application and verify the installation:
@@ -80,7 +80,7 @@ kubectl get pods -n dapr-system
 Create an Argo CD application for Redis:
 
 ```bash
-argocd app create redis --repo https://github.com/rochabr/dapr-argocd.git --path gitops/redis --dest-server https://kubernetes.default.svc --dest-namespace redis
+argocd app create redis --repo https://github.com/<your-username>/dapr-argocd.git --path gitops/redis --dest-server https://kubernetes.default.svc --dest-namespace redis
 ```
 
 Sync the application and verify the installation:
@@ -103,7 +103,7 @@ Create the Dapr state store component application:
 
 ```bash
 argocd app create dapr-components \
-  --repo https://github.com/rochabr/dapr-argocd.git \
+  --repo https://github.com/<your-username>/dapr-argocd.git \
   --path gitops/dapr-components \
   --dest-server https://kubernetes.default.svc \
   --dest-namespace argocd-demo
@@ -123,14 +123,14 @@ Deploy the `node` and `python` applications:
 ```bash
 # Node app
 argocd app create node \
-  --repo https://github.com/rochabr/dapr-argocd.git \
+  --repo https://github.com/<your-username>/dapr-argocd.git \
   --path app/node \
   --dest-server https://kubernetes.default.svc \
   --dest-namespace argocd-demo
 
 # Python app
 argocd app create python \
-  --repo https://github.com/rochabr/dapr-argocd.git \
+  --repo https://github.com/<your-username>/dapr-argocd.git \
   --path app/python \
   --dest-server https://kubernetes.default.svc \
   --dest-namespace argocd-demo
@@ -164,7 +164,7 @@ This will make your service available on `http://localhost:8081`.
 In a new terminal run:
 
 ```bash
-curl -d '{"data":{"orderId":"42"}}' -H "Content-Type:application/json" -X POST http://20.75.235.117:80/neworder
+curl -d '{"data":{"orderId":"42"}}' -H "Content-Type:application/json" -X POST http://localhost:8081/neworder
 ```
 
 Expected output:

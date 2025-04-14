@@ -28,7 +28,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-  # Add the ignoreDifferences section here
+  # This configuration tells Argo CD to ignore changes to specific paths in the subscriptions.dapr.io CRD. As a result, Argo CD won’t flag the app as out-of-sync    
   ignoreDifferences:
     - group: apiextensions.k8s.io
       kind: CustomResourceDefinition
