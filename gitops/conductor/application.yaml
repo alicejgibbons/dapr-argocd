@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     chart: agent
-    repoURL: public.ecr.aws/diagrid/conductor-charts
+    repoURL: public.ecr.aws/diagrid-dev/conductor-charts
     targetRevision: 0.365.0
     helm:
       valueFiles:
