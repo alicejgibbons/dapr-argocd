@@ -3,8 +3,6 @@ kind: Application
 metadata:
   name: dapr-conductor
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
@@ -12,7 +10,6 @@ spec:
     repoURL: public.ecr.aws/diagrid/conductor-charts
     targetRevision: 0.365.0
     helm:
-      releaseName: argo-cluster
       valueFiles:
         - values.yaml
   destination:
@@ -27,6 +24,7 @@ spec:
   ignoreDifferences:
     - group: apiextensions.k8s.io
       kind: CustomResourceDefinition
+      name: subscriptions.dapr.io
       jsonPointers:
         - /spec/conversion/webhook/clientConfig/service/namespace
         - /spec/conversion/webhook/clientConfig/caBundle
