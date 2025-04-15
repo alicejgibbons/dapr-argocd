@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: dapr-conductor
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
@@ -12,7 +14,7 @@ spec:
     helm:
       releaseName: conductor-agent
       valueFiles:
-        -  https://api.stg.diagrid.io/apis/diagrid.io/v1beta1/clusters/63b56921-de1e-432a-943e-4e2ded372027/helmvalues\?token\=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZXMiOlsicmVhZDptYW5pZmVzdCJdLCJodHRwczovL2RpYWdyaWQuaW8vb3JnSWQiOiJkMDlmMjY2My0xMDRkLTQ3NjctYjI1MC0zOGViZmExODMwOWEiLCJodHRwczovL2RpYWdyaWQuaW8vZW1haWwiOiJhbGljZUBkaWFncmlkLmlvIiwiaWF0IjoxNzQ0NzI3Njk0LCJleHAiOjE3NDQ4MTQwOTQsImF1ZCI6InVybjphZG1pbmdyaWQiLCJpc3MiOiJkaWFncmlkLmlvIiwic3ViIjoiYXV0aDB8NjMwM2E4MTg1MThmNjQ0OTliMTZlYTgxIiwianRpIjoid3M2a2R4OHhoc2Y2M2Q2bGhibWNudCJ9.Kq9WHJ3GY5dtcCTJLmcviEWCerGGZxjTpdTRP9agAMs
+        - https://api.stg.diagrid.io/apis/diagrid.io/v1beta1/clusters/84034358-0d9c-490a-bd58-ec2714085185/helmvalues\?token\=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZXMiOlsicmVhZDptYW5pZmVzdCJdLCJodHRwczovL2RpYWdyaWQuaW8vb3JnSWQiOiJkMDlmMjY2My0xMDRkLTQ3NjctYjI1MC0zOGViZmExODMwOWEiLCJodHRwczovL2RpYWdyaWQuaW8vZW1haWwiOiJhbGljZUBkaWFncmlkLmlvIiwiaWF0IjoxNzQ0NzI3Njk0LCJleHAiOjE3NDQ4MTQwOTQsImF1ZCI6InVybjphZG1pbmdyaWQiLCJpc3MiOiJkaWFncmlkLmlvIiwic3ViIjoiYXV0aDB8NjMwM2E4MTg1MThmNjQ0OTliMTZlYTgxIiwianRpIjoid3M2a2R4OHhoc2Y2M2Q2bGhibWNudCJ9.Kq9WHJ3GY5dtcCTJLmcviEWCerGGZxjTpdTRP9agAMs
   destination:
     server: https://kubernetes.default.svc
     namespace: dapr-system
